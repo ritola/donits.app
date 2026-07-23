@@ -1,0 +1,30 @@
+{
+  "tasks": {
+    "dev": "deno run -A npm:vite",
+    "build": "deno run -A npm:vite build",
+    "desktop": "deno task build && deno desktop .",
+    "desktop:hmr": "deno desktop --hmr ."
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "lib": ["dom", "dom.iterable", "deno.ns"],
+    "types": ["react", "react-dom"]
+  },
+  "imports": {
+    "react": "npm:react@latest",
+    "react-dom": "npm:react-dom@latest",
+    "react-dom/client": "npm:react-dom@latest/client",
+    "vite": "npm:vite@latest",
+    "@vitejs/plugin-react": "npm:@vitejs/plugin-react@latest",
+    "@deno/vite-plugin": "npm:@deno/vite-plugin@latest",
+    "@types/react": "npm:@types/react@latest",
+    "@types/react-dom": "npm:@types/react-dom@latest"
+  },
+  "desktop": {
+    "app": {
+      "name": "Donits.app",
+      "identifier": "app.donits.desktop"
+    }
+  }
+}

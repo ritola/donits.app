@@ -1,0 +1,4 @@
+{
+  "name": "@donits/shared",
+  "exports": "./mod.ts"
+}

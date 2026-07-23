@@ -1,0 +1,14 @@
+{
+  "workspace": ["./apps/desktop", "./packages/shared"],
+  "nodeModulesDir": "auto",
+  "exclude": ["**/node_modules", "**/dist"],
+  "fmt": {
+    "semiColons": false,
+    "singleQuote": true,
+    "indentWidth": 2,
+    "useTabs": false,
+    "lineWidth": 80,
+    "include": ["src/"],
+    "exclude": ["dist/", "node_modules/", "*.md"]
+  }
+}
