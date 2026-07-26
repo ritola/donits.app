@@ -12,6 +12,10 @@
     "types": ["react", "react-dom"]
   },
   "imports": {
+    "@isomorphic-git/lightning-fs": "npm:@isomorphic-git/lightning-fs@^4.6.3",
+    "@material/material-color-utilities": "npm:@material/material-color-utilities@^0.4.0",
+    "@material/web": "npm:@material/web@^2.5.0",
+    "isomorphic-git": "npm:isomorphic-git@^1.40.0",
     "react": "npm:react@latest",
     "react-dom": "npm:react-dom@latest",
     "react-dom/client": "npm:react-dom@latest/client",
