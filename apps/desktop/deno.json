@@ -1,6 +1,7 @@
 {
   "tasks": {
     "dev": "deno run -A npm:vite",
+    "server": "deno run -A server.ts",
     "build": "deno run -A npm:vite build",
     "desktop": "deno task build && deno desktop .",
     "desktop:hmr": "deno desktop --hmr ."
@@ -8,27 +9,34 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "lib": ["dom", "dom.iterable", "deno.ns"],
-    "types": ["react", "react-dom"]
+    "lib": ["dom", "dom.iterable", "deno.ns", "deno.desktop"],
+    "types": ["react", "react-dom", "./src/theme/material-web.d.ts"]
   },
   "imports": {
-    "@isomorphic-git/lightning-fs": "npm:@isomorphic-git/lightning-fs@^4.6.3",
     "@material/material-color-utilities": "npm:@material/material-color-utilities@^0.4.0",
     "@material/web": "npm:@material/web@^2.5.0",
+    "@std/path": "jsr:@std/path@^1.1.6",
     "isomorphic-git": "npm:isomorphic-git@^1.40.0",
+    "hono": "npm:hono@latest",
+    "@std/http": "jsr:@std/http@^1",
     "react": "npm:react@latest",
     "react-dom": "npm:react-dom@latest",
     "react-dom/client": "npm:react-dom@latest/client",
+    "rpc-websockets": "npm:rpc-websockets@^10.0.1",
     "vite": "npm:vite@latest",
     "@vitejs/plugin-react": "npm:@vitejs/plugin-react@latest",
     "@deno/vite-plugin": "npm:@deno/vite-plugin@latest",
     "@types/react": "npm:@types/react@latest",
-    "@types/react-dom": "npm:@types/react-dom@latest"
+    "@types/react-dom": "npm:@types/react-dom@latest",
+    "fp-ts/Either": "npm:fp-ts@^2.16.11/lib/Either.js",
+    "fp-ts/function": "npm:fp-ts@^2.16.11/lib/function.js",
+    "fp-ts/TaskEither": "npm:fp-ts@^2.16.11/lib/TaskEither.js"
   },
   "desktop": {
     "app": {
       "name": "Donits.app",
-      "identifier": "app.donits.desktop"
+      "identifier": "app.donits.desktop",
+      "backend": "webview"
     }
   }
 }

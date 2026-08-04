@@ -20,7 +20,7 @@ interface MdFilledButtonAttributes extends React.HTMLAttributes<HTMLElement> {
   type?: 'button' | 'submit' | 'reset'
 }
 
-declare module 'react' {
+declare module 'react/jsx-runtime' {
   namespace JSX {
     interface IntrinsicElements {
       'md-outlined-text-field': MdOutlinedTextFieldAttributes

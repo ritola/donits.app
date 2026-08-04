@@ -10,6 +10,13 @@
   color: var(--md-sys-color-error);
 }
 
+.connect-device-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .connect-status {
   color: var(--md-sys-color-primary);
 }

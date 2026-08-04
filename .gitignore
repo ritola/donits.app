@@ -1,8 +1,11 @@
 # AI
-.claude
+.claude/
+.superpowers/
+docs/superpowers/plans
 
 # Dependencies
 node_modules/
+apps/desktop/node_modules
 
 # Build output
 dist/
@@ -11,3 +14,8 @@ dist/
 *.AppImage
 *.msi
 .vite/
+
+# Run
+apps/desktop/repository/
+apps/desktop/src/repository/
+
