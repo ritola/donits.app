@@ -1,5 +1,11 @@
 import { join } from '@std/path'
 
+const appName = 'donits.app'
+
+type Settings = {
+  repositories: string[]
+}
+
 function getConfigDir(appName: string): string {
   const home = Deno.env.get('HOME') || Deno.env.get('USERPROFILE') || ''
 
@@ -43,10 +49,9 @@ function loadSettings<T extends object>(configPath: string, defaults: T): T {
   }
 }
 
-export function createSettingsManager<T extends object>(
-  appName: string,
-  defaults: T,
-): SettingsStore<T> {
+export function createSettingsManager(
+  defaults: Settings,
+): SettingsStore<Settings> {
   const configPath = getSettingsPath(appName)
   const settings = loadSettings(configPath, defaults)
 

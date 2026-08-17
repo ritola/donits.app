@@ -20,11 +20,18 @@ interface MdFilledButtonAttributes extends React.HTMLAttributes<HTMLElement> {
   type?: 'button' | 'submit' | 'reset'
 }
 
+interface MdDialogAttributes extends React.HTMLAttributes<HTMLElement> {
+  open?: boolean
+  onCancel?: (event: React.SyntheticEvent<HTMLFormElement>) => void
+  ref?: React.Ref<HTMLElement>
+}
+
 declare module 'react/jsx-runtime' {
   namespace JSX {
     interface IntrinsicElements {
       'md-outlined-text-field': MdOutlinedTextFieldAttributes
       'md-filled-button': MdFilledButtonAttributes
+      'md-dialog': MdDialogAttributes
     }
   }
 }

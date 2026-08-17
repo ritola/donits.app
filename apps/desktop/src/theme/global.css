@@ -9,3 +9,9 @@ body {
   color: var(--md-sys-color-on-background);
   font-family: system-ui, sans-serif;
 }
+
+@media (prefers-color-scheme: dark) {
+  md-dialog.connect-dialog {
+    --md-dialog-container-color: #1d1d1d;
+  }
+}
