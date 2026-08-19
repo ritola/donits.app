@@ -1,9 +1,14 @@
 import git from 'isomorphic-git'
 import http from 'isomorphic-git/http/web'
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
+import { join } from '@std/path'
+
+import { getSettingsDirectory } from '../../lib/backend/settings.ts'
 
 const GITHUB_CLIENT_ID = 'Iv23lif1vNWMuBk951bj'
-const REPOSITORY_DIR = `${import.meta.dirname}/../../repository`
+const MAX_RECENT_REPOSITORIES = 10
+const REPOSITORY_DIR = join(getSettingsDirectory(), 'repositories')
 const DOC_FOLDERS = {
   backlog: 'doc/backlog',
   done: 'doc/done',
@@ -12,9 +17,11 @@ const DOC_FOLDERS = {
 const state: {
   githubAccessToken: string | null
   githubDeviceAuth: { userCode: string; verificationUri: string } | null
+  repositoryDir: string | null
 } = {
   githubAccessToken: null,
   githubDeviceAuth: null,
+  repositoryDir: null,
 }
 
 type DeviceCodeResponse = {
@@ -140,6 +147,10 @@ export function getGitHubAuthStatus(): {
 
 export function clone(repositoryUrl: string): Promise<void> {
   const githubAccessToken = state.githubAccessToken
+  const repositoryDir = join(
+    REPOSITORY_DIR,
+    createHash('sha256').update(repositoryUrl).digest('hex'),
+  )
 
   if (!githubAccessToken) {
     throw new Error('GitHub access token is required')
@@ -148,18 +159,95 @@ export function clone(repositoryUrl: string): Promise<void> {
   return git.clone({
     fs,
     http,
-    dir: REPOSITORY_DIR,
+    dir: repositoryDir,
     url: repositoryUrl,
     onAuth: () => ({
       username: githubAccessToken,
     }),
+  }).then(() => {
+    state.repositoryDir = repositoryDir
   })
 }
 
+export function listRepositoryUrls(): string[] {
+  const repositoryUrls: string[] = []
+  const seenRepositoryUrls = new Set<string>()
+
+  for (const repositoryDir of listGitRepositoryDirs()) {
+    for (const repositoryUrl of listRemoteUrls(repositoryDir)) {
+      if (seenRepositoryUrls.has(repositoryUrl)) {
+        continue
+      }
+
+      seenRepositoryUrls.add(repositoryUrl)
+      repositoryUrls.push(repositoryUrl)
+
+      if (repositoryUrls.length === MAX_RECENT_REPOSITORIES) {
+        return repositoryUrls
+      }
+    }
+  }
+
+  return repositoryUrls
+}
+
+function listGitRepositoryDirs(): string[] {
+  try {
+    return fs.readdirSync(REPOSITORY_DIR, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => join(REPOSITORY_DIR, entry.name))
+  } catch {
+    return []
+  }
+}
+
+function listRemoteUrls(repositoryDir: string): string[] {
+  try {
+    return parseRemoteUrls(
+      fs.readFileSync(join(repositoryDir, '.git', 'config'), 'utf8'),
+    )
+  } catch {
+    return []
+  }
+}
+
+function parseRemoteUrls(config: string): string[] {
+  const remoteUrls: string[] = []
+  let isRemoteSection = false
+
+  for (const rawLine of config.split(/\r?\n/)) {
+    const line = rawLine.trim()
+
+    if (!line || line.startsWith('#') || line.startsWith(';')) {
+      continue
+    }
+
+    if (line.startsWith('[') && line.endsWith(']')) {
+      isRemoteSection = line.startsWith('[remote ')
+      continue
+    }
+
+    if (!isRemoteSection) {
+      continue
+    }
+
+    const match = /^url\s*=\s*(.+)$/.exec(line)
+    const remoteUrl = match?.[1]?.trim()
+
+    if (remoteUrl) {
+      remoteUrls.push(remoteUrl)
+    }
+  }
+
+  return remoteUrls
+}
+
 export async function listBranches(): Promise<string[]> {
+  if (!state.repositoryDir) return Promise.resolve([])
+
   const remoteBranches = await git.listBranches({
     fs,
-    dir: REPOSITORY_DIR,
+    dir: state.repositoryDir,
     remote: 'origin',
   })
   const branches = remoteBranches.filter((branch) => branch !== 'HEAD')
@@ -170,7 +258,7 @@ export async function listBranches(): Promise<string[]> {
 
   return await git.listBranches({
     fs,
-    dir: REPOSITORY_DIR,
+    dir: state.repositoryDir,
   })
 }
 
@@ -189,13 +277,15 @@ export async function listBranchDocContents(): Promise<BranchDocContents[]> {
 }
 
 async function listFilesForBranch(branch: string): Promise<string[]> {
+  if (!state.repositoryDir) return Promise.resolve([])
+
   const refs = [branch, `origin/${branch}`, `refs/remotes/origin/${branch}`]
 
   for (const ref of refs) {
     try {
       return await git.listFiles({
         fs,
-        dir: REPOSITORY_DIR,
+        dir: state.repositoryDir,
         ref,
       })
     } catch (err) {

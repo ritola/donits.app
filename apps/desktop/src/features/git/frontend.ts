@@ -59,6 +59,16 @@ export async function clone(repositoryUrl: string): Promise<void> {
   }
 }
 
+export async function listRepositoryUrls(): Promise<string[]> {
+  const client = await connect()
+
+  try {
+    return await client.call('git.listRepositoryUrls') as string[]
+  } finally {
+    client.close()
+  }
+}
+
 export async function listBranches(): Promise<string[]> {
   const client = await connect()
 

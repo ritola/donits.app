@@ -21,6 +21,7 @@ import type { ConnectionState, DeviceAuth } from '../../App.tsx'
 import {
   clone,
   getGitHubAuthStatus,
+  listRepositoryUrls,
   startGitHubDeviceAuth,
 } from './frontend.ts'
 
@@ -52,6 +53,7 @@ type ConnectProps = {
 
 export default function Connect({ setConnection }: ConnectProps) {
   const [githubRepositoryUrl, setGithubRepositoryUrl] = useState('')
+  const [recentRepositoryUrls, setRecentRepositoryUrls] = useState<string[]>([])
   const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -65,10 +67,28 @@ export default function Connect({ setConnection }: ConnectProps) {
     }
   }, [])
 
-  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault()
+  useEffect(() => {
+    let isCurrent = true
 
-    const repositoryUrl = githubRepositoryUrl.trim()
+    void listRepositoryUrls()
+      .then((repositoryUrls) => {
+        if (isCurrent && isMountedRef.current) {
+          setRecentRepositoryUrls(repositoryUrls)
+        }
+      })
+      .catch(() => {
+        if (isCurrent && isMountedRef.current) {
+          setRecentRepositoryUrls([])
+        }
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [])
+
+  async function connectRepository(repositoryUrlValue: string) {
+    const repositoryUrl = repositoryUrlValue.trim()
     if (!repositoryUrl) {
       setError('GitHub repository URL is required.')
       return
@@ -131,6 +151,12 @@ export default function Connect({ setConnection }: ConnectProps) {
               verificationUri: auth.verificationUri,
             },
           })
+          setRecentRepositoryUrls((repositoryUrls) =>
+            [
+              repositoryUrl,
+              ...repositoryUrls.filter((url) => url !== repositoryUrl),
+            ].slice(0, 10)
+          )
           setIsConnected(true)
         })
       ),
@@ -147,15 +173,58 @@ export default function Connect({ setConnection }: ConnectProps) {
     }
   }
 
+  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    await connectRepository(githubRepositoryUrl)
+  }
+
   return (
     <form
       className='connect-form'
       onSubmit={(event) => void handleSubmit(event)}
     >
+      {recentRepositoryUrls.length > 0 && (
+        <div className='connect-repository-url-picker'>
+          <span className='connect-repository-url-heading md-typescale-label-large'>
+            Recent repositories
+          </span>
+          <ul className='connect-repository-url-list'>
+            {recentRepositoryUrls.map((repositoryUrl) => (
+              <li className='connect-repository-url-item' key={repositoryUrl}>
+                <a
+                  aria-disabled={isConnecting}
+                  className='connect-repository-url-link md-typescale-body-medium'
+                  href={repositoryUrl}
+                  onClick={(event) => {
+                    event.preventDefault()
+
+                    if (!isConnecting) {
+                      setGithubRepositoryUrl(repositoryUrl)
+                      void connectRepository(repositoryUrl)
+                    }
+                  }}
+                >
+                  <span
+                    className='connect-repository-url-icon'
+                    aria-hidden='true'
+                  >
+                    Git
+                  </span>
+                  <span className='connect-repository-url-text'>
+                    {repositoryUrl}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <md-outlined-text-field
         autocomplete='off'
+        className='connect-repository-url-field'
         disabled={isConnecting}
-        label='GitHub repository URL'
+        label='GitHub Clone HTTPS URL'
         name='githubRepositoryUrl'
         onInput={(event) => setGithubRepositoryUrl(event.currentTarget.value)}
         required

@@ -3,7 +3,7 @@ import { join } from '@std/path'
 const appName = 'donits.app'
 
 type Settings = {
-  repositories: string[]
+  foo: string
 }
 
 function getConfigDir(appName: string): string {
@@ -29,9 +29,14 @@ export type SettingsStore<T extends object> = {
   set<K extends keyof T>(key: K, value: T[K]): void
 }
 
-function getSettingsPath(appName: string): string {
+export function getSettingsDirectory(): string {
   const dir = getConfigDir(appName)
   Deno.mkdirSync(dir, { recursive: true })
+  return dir
+}
+
+function getSettingsPath(): string {
+  const dir = getSettingsDirectory()
   return join(dir, 'settings.json')
 }
 
@@ -52,7 +57,7 @@ function loadSettings<T extends object>(configPath: string, defaults: T): T {
 export function createSettingsManager(
   defaults: Settings,
 ): SettingsStore<Settings> {
-  const configPath = getSettingsPath(appName)
+  const configPath = getSettingsPath()
   const settings = loadSettings(configPath, defaults)
 
   return {

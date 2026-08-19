@@ -3,7 +3,94 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
-  max-width: 320px;
+  max-width: 640px;
+}
+
+.connect-repository-url-field {
+  width: 640px;
+  max-width: 100%;
+}
+
+.connect-repository-url-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 640px;
+  max-width: 100%;
+}
+
+.connect-repository-url-heading {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.connect-repository-url-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.connect-repository-url-item {
+  margin: 0;
+}
+
+.connect-repository-url-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.connect-repository-url-link:hover,
+.connect-repository-url-link:focus-visible {
+  border-color: var(--md-sys-color-primary);
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-primary);
+}
+
+.connect-repository-url-link:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.connect-repository-url-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.connect-repository-url-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.connect-repository-url-link[aria-disabled='true'] {
+  border-color: var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface-variant);
+  pointer-events: none;
 }
 
 .connect-error {

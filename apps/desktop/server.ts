@@ -3,6 +3,7 @@ import {
   getGitHubAuthStatus,
   listBranchDocContents,
   listBranches,
+  listRepositoryUrls,
   startGitHubDeviceAuth,
 } from './src/features/git/backend.ts'
 import { Hono } from 'hono'
@@ -23,6 +24,7 @@ export function startServer() {
 
   ns.register('git.startGitHubDeviceAuth', () => startGitHubDeviceAuth())
   ns.register('git.getGitHubAuthStatus', () => getGitHubAuthStatus())
+  ns.register('git.listRepositoryUrls', () => listRepositoryUrls())
 
   ns.register('git.clone', async (params: unknown) => {
     try {

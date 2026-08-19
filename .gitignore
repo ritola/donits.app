@@ -15,7 +15,3 @@ dist/
 *.msi
 .vite/
 
-# Run
-apps/desktop/repository/
-apps/desktop/src/repository/
-
