@@ -3,7 +3,7 @@ import { join } from '@std/path'
 const appName = 'donits.app'
 
 type Settings = {
-  foo: string
+  selectedRepositoryUrl?: string
 }
 
 function getConfigDir(appName: string): string {
@@ -68,3 +68,7 @@ export function createSettingsManager(
     },
   }
 }
+
+export const settings: SettingsStore<Settings> = createSettingsManager({
+  selectedRepositoryUrl: undefined,
+})

@@ -7,7 +7,6 @@ import {
   chainW,
   fromIO,
   left,
-  map,
   right,
   type TaskEither,
   tryCatch,
@@ -98,7 +97,7 @@ export default function Connect({ setConnection }: ConnectProps) {
     setError(null)
     setIsConnected(false)
     setDeviceAuth(null)
-    setConnection({ repositoryUrl: null, deviceAuth: null })
+    setConnection({ repositoryUrl: undefined, deviceAuth: undefined })
 
     type ConnectFailure = Error | 'unmounted'
 
@@ -117,40 +116,36 @@ export default function Connect({ setConnection }: ConnectProps) {
     ): TaskEither<ConnectFailure, A> =>
       onlyWhileMounted(tryCatch(task, toConnectFailure))
 
-    const result = await pipe(
-      connectTask(() => startGitHubDeviceAuth()),
-      chainFirstW((auth) =>
-        fromIO(() => {
-          const deviceAuth = {
-            userCode: auth.userCode,
-            verificationUri: auth.verificationUri,
-          }
+    const ensureGitHubAuth = (): TaskEither<ConnectFailure, void> =>
+      pipe(
+        connectTask(() => getGitHubAuthStatus()),
+        chainW((status) =>
+          status.accessToken ? right(undefined) : pipe(
+            connectTask(() => startGitHubDeviceAuth()),
+            chainFirstW((auth) =>
+              fromIO(() => {
+                const deviceAuth = {
+                  userCode: auth.userCode,
+                  verificationUri: auth.verificationUri,
+                }
 
-          setDeviceAuth(deviceAuth)
-          setConnection({ repositoryUrl: null, deviceAuth })
-        })
-      ),
-      chainW((auth) =>
-        pipe(
-          connectTask(() => waitForGitHubAuth(auth.expiresIn)),
-          map(() => auth),
-        )
-      ),
-      chainW((auth) =>
-        pipe(
-          connectTask(() => clone(repositoryUrl)),
-          map(() => auth),
-        )
-      ),
-      chainFirstW((auth) =>
+                setDeviceAuth(deviceAuth)
+                setConnection({ repositoryUrl: undefined, deviceAuth })
+              })
+            ),
+            chainW((auth) =>
+              connectTask(() => waitForGitHubAuth(auth.expiresIn))
+            ),
+          )
+        ),
+      )
+
+    const result = await pipe(
+      ensureGitHubAuth(),
+      chainW(() => connectTask(() => clone(repositoryUrl))),
+      chainFirstW(() =>
         fromIO(() => {
-          setConnection({
-            repositoryUrl,
-            deviceAuth: {
-              userCode: auth.userCode,
-              verificationUri: auth.verificationUri,
-            },
-          })
+          setConnection({ repositoryUrl, deviceAuth: undefined })
           setRecentRepositoryUrls((repositoryUrls) =>
             [
               repositoryUrl,
@@ -164,7 +159,7 @@ export default function Connect({ setConnection }: ConnectProps) {
 
     if (isMountedRef.current) {
       if (isLeft(result) && result.left !== 'unmounted') {
-        setConnection({ repositoryUrl: null, deviceAuth: null })
+        setConnection({ repositoryUrl: undefined, deviceAuth: undefined })
         setError(result.left.message)
       }
 
@@ -220,6 +215,9 @@ export default function Connect({ setConnection }: ConnectProps) {
           </ul>
         </div>
       )}
+      <span className='connect-repository-url-heading md-typescale-label-large'>
+        Add repository
+      </span>
       <md-outlined-text-field
         autocomplete='off'
         className='connect-repository-url-field'

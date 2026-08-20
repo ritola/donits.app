@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import Branches from './features/git/Branches.tsx'
 import Connect from './features/git/Connect.tsx'
+import { getConnectionState } from './features/git/frontend.ts'
 import MdDialog from './MdDialog.tsx'
 
 const donitsLogoUrl =
@@ -13,16 +14,32 @@ export type DeviceAuth = {
 }
 
 export type ConnectionState = {
-  repositoryUrl: string | null
-  deviceAuth: DeviceAuth | null
+  repositoryUrl?: string
+  deviceAuth?: DeviceAuth
 }
 
 export default function App() {
   const [connection, setConnection] = useState<ConnectionState>({
-    repositoryUrl: null,
-    deviceAuth: null,
+    repositoryUrl: undefined,
+    deviceAuth: undefined,
   })
-  const isConnected = connection.repositoryUrl && connection.deviceAuth
+  const isConnected = connection.repositoryUrl !== undefined
+
+  useEffect(() => {
+    let isCurrent = true
+
+    void getConnectionState()
+      .then(({ repositoryUrl }) => {
+        if (isCurrent && repositoryUrl) {
+          setConnection({ repositoryUrl, deviceAuth: undefined })
+        }
+      })
+      .catch(() => {})
+
+    return () => {
+      isCurrent = false
+    }
+  }, [])
 
   return (
     <>

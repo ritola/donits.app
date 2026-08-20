@@ -1,5 +1,6 @@
 import {
   clone,
+  getConnectionState,
   getGitHubAuthStatus,
   listBranchDocContents,
   listBranches,
@@ -25,6 +26,7 @@ export function startServer() {
   ns.register('git.startGitHubDeviceAuth', () => startGitHubDeviceAuth())
   ns.register('git.getGitHubAuthStatus', () => getGitHubAuthStatus())
   ns.register('git.listRepositoryUrls', () => listRepositoryUrls())
+  ns.register('git.getConnectionState', () => getConnectionState())
 
   ns.register('git.clone', async (params: unknown) => {
     try {

@@ -8,7 +8,7 @@ export type GitHubDeviceAuth = {
 
 export type GitHubAuthStatus = {
   accessToken: boolean
-  deviceAuth: { userCode: string; verificationUri: string } | null
+  deviceAuth: { userCode: string; verificationUri: string } | undefined
 }
 
 export type BranchDocContents = {
@@ -64,6 +64,20 @@ export async function listRepositoryUrls(): Promise<string[]> {
 
   try {
     return await client.call('git.listRepositoryUrls') as string[]
+  } finally {
+    client.close()
+  }
+}
+
+export async function getConnectionState(): Promise<
+  { repositoryUrl: string | null }
+> {
+  const client = await connect()
+
+  try {
+    return await client.call('git.getConnectionState') as {
+      repositoryUrl: string | null
+    }
   } finally {
     client.close()
   }

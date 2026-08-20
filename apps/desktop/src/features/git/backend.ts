@@ -4,9 +4,15 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import { join } from '@std/path'
 
-import { getSettingsDirectory } from '../../lib/backend/settings.ts'
+import { getSettingsDirectory, settings } from '../../lib/backend/settings.ts'
+import {
+  clearSecret,
+  getSecret,
+  setSecret,
+} from '../../lib/backend/secureStorage.ts'
 
 const GITHUB_CLIENT_ID = 'Iv23lif1vNWMuBk951bj'
+const GITHUB_TOKEN_ACCOUNT = 'github-access-token'
 const MAX_RECENT_REPOSITORIES = 10
 const REPOSITORY_DIR = join(getSettingsDirectory(), 'repositories')
 const DOC_FOLDERS = {
@@ -15,13 +21,13 @@ const DOC_FOLDERS = {
 } as const
 
 const state: {
-  githubAccessToken: string | null
-  githubDeviceAuth: { userCode: string; verificationUri: string } | null
-  repositoryDir: string | null
+  githubAccessToken: string | undefined
+  githubDeviceAuth: { userCode: string; verificationUri: string } | undefined
+  repositoryDir: string | undefined
 } = {
-  githubAccessToken: null,
-  githubDeviceAuth: null,
-  repositoryDir: null,
+  githubAccessToken: undefined,
+  githubDeviceAuth: undefined,
+  repositoryDir: undefined,
 }
 
 type DeviceCodeResponse = {
@@ -75,7 +81,8 @@ export async function startGitHubDeviceAuth(): Promise<{
     )
   }
 
-  state.githubAccessToken = null
+  state.githubAccessToken = undefined
+  clearSecret(GITHUB_TOKEN_ACCOUNT)
   state.githubDeviceAuth = {
     userCode: payload.user_code,
     verificationUri: payload.verification_uri,
@@ -116,7 +123,8 @@ async function pollGitHubDeviceToken(
 
     if (payload.access_token) {
       state.githubAccessToken = payload.access_token
-      state.githubDeviceAuth = null
+      setSecret(GITHUB_TOKEN_ACCOUNT, payload.access_token)
+      state.githubDeviceAuth = undefined
       return
     }
 
@@ -130,27 +138,39 @@ async function pollGitHubDeviceToken(
     }
 
     // Any other error (access_denied, expired_token, ...) ends the poll.
-    state.githubDeviceAuth = null
+    state.githubDeviceAuth = undefined
     return
   }
 }
 
+function getGitHubAccessToken(): string | undefined {
+  if (state.githubAccessToken === undefined) {
+    state.githubAccessToken = getSecret(GITHUB_TOKEN_ACCOUNT)
+  }
+
+  return state.githubAccessToken
+}
+
 export function getGitHubAuthStatus(): {
   accessToken: boolean
-  deviceAuth: { userCode: string; verificationUri: string } | null
+  deviceAuth: { userCode: string; verificationUri: string } | undefined
 } {
   return {
-    accessToken: state.githubAccessToken !== null,
+    accessToken: getGitHubAccessToken() !== undefined,
     deviceAuth: state.githubDeviceAuth,
   }
 }
 
-export function clone(repositoryUrl: string): Promise<void> {
-  const githubAccessToken = state.githubAccessToken
-  const repositoryDir = join(
+function getRepositoryDir(repositoryUrl: string): string {
+  return join(
     REPOSITORY_DIR,
     createHash('sha256').update(repositoryUrl).digest('hex'),
   )
+}
+
+export function clone(repositoryUrl: string): Promise<void> {
+  const githubAccessToken = getGitHubAccessToken()
+  const repositoryDir = getRepositoryDir(repositoryUrl)
 
   if (!githubAccessToken) {
     throw new Error('GitHub access token is required')
@@ -166,7 +186,26 @@ export function clone(repositoryUrl: string): Promise<void> {
     }),
   }).then(() => {
     state.repositoryDir = repositoryDir
+    settings.set('selectedRepositoryUrl', repositoryUrl)
   })
+}
+
+export function getConnectionState(): { repositoryUrl: string | null } {
+  const repositoryUrl = settings.get('selectedRepositoryUrl')
+
+  if (!repositoryUrl) {
+    return { repositoryUrl: null }
+  }
+
+  const repositoryDir = getRepositoryDir(repositoryUrl)
+
+  if (!fs.existsSync(repositoryDir)) {
+    settings.set('selectedRepositoryUrl', undefined)
+    return { repositoryUrl: null }
+  }
+
+  state.repositoryDir = repositoryDir
+  return { repositoryUrl }
 }
 
 export function listRepositoryUrls(): string[] {
