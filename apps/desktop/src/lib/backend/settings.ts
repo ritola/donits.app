@@ -7,6 +7,12 @@ type Settings = {
 }
 
 function getConfigDir(appName: string): string {
+  const override = Deno.env.get('DONITS_CONFIG_DIR')
+
+  if (override) {
+    return override
+  }
+
   const home = Deno.env.get('HOME') || Deno.env.get('USERPROFILE') || ''
 
   switch (Deno.build.os) {

@@ -30,6 +30,18 @@ const state: {
   repositoryDir: undefined,
 }
 
+function githubBaseUrl(): string {
+  return Deno.env.get('DONITS_GITHUB_BASE_URL') ?? 'https://github.com'
+}
+
+export function githubDeviceCodeUrl(): string {
+  return `${githubBaseUrl()}/login/device/code`
+}
+
+export function githubAccessTokenUrl(): string {
+  return `${githubBaseUrl()}/login/oauth/access_token`
+}
+
 type DeviceCodeResponse = {
   device_code: string
   user_code: string
@@ -56,7 +68,7 @@ export async function startGitHubDeviceAuth(): Promise<{
   verificationUri: string
   expiresIn: number
 }> {
-  const res = await fetch('https://github.com/login/device/code', {
+  const res = await fetch(githubDeviceCodeUrl(), {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
@@ -106,7 +118,7 @@ async function pollGitHubDeviceToken(
   while (true) {
     await new Promise((resolve) => setTimeout(resolve, interval * 1000))
 
-    const res = await fetch('https://github.com/login/oauth/access_token', {
+    const res = await fetch(githubAccessTokenUrl(), {
       method: 'POST',
       headers: {
         'Accept': 'application/json',

@@ -15,3 +15,7 @@ dist/
 *.msi
 .vite/
 
+# Test artifacts
+.tmp/
+
+.worktrees/
