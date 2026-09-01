@@ -3,8 +3,8 @@
     "dev": "deno run -A npm:vite",
     "server": "deno run -A server.ts",
     "build": "deno run -A npm:vite build",
-    "desktop": "deno task build && deno desktop .",
-    "desktop:hmr": "deno desktop --hmr ."
+    "desktop": "deno task build && deno desktop --backend webview .",
+    "desktop:hmr": "deno desktop --hmr --backend webview ."
   },
   "compilerOptions": {
     "jsx": "react-jsx",
@@ -36,8 +36,7 @@
   "desktop": {
     "app": {
       "name": "Donits.app",
-      "identifier": "app.donits.desktop",
-      "backend": "webview"
+      "identifier": "app.donits.desktop"
     }
   }
 }
